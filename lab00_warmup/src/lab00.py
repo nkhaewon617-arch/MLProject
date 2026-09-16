@@ -30,6 +30,8 @@ def sigmoid(z: np.ndarray) -> np.ndarray:
         `sigmoid(np.array([-1000.0, 1000.0]))` must return finite numbers,
         never `nan`.
     """
+    return 1 / (1 + np.exp(-z))
+
     raise NotImplementedError
 # ============================ END TODO (Task 1) ==============================
 
@@ -51,6 +53,9 @@ def softmax_loop(z: list) -> list:
     Requirement: the result must be finite for large-magnitude inputs.
         `softmax_loop([1000.0, 1001.0])` must not raise `OverflowError`.
     """
+    S = math.fsum(math.exp(j) for j in z)
+    return [math.exp(i) / S for i in z]
+
     raise NotImplementedError
 # ============================ END TODO (Task 2) ==============================
 
@@ -71,6 +76,8 @@ def softmax_np(z: np.ndarray) -> np.ndarray:
     Requirement: the result must be finite for large-magnitude inputs.
         `softmax_np(np.array([1000.0, 1001.0]))` must not contain `nan`.
     """
+    return np.exp(z) / np.sum(np.exp(z))
+
     raise NotImplementedError
 # ============================ END TODO (Task 3) ==============================
 
@@ -91,6 +98,9 @@ def entropy(p: np.ndarray) -> float:
         0 * log(0) = 0, so the result stays finite (never `nan`, never `inf`).
         A one-hot `p` must give exactly 0.0.
     """
+    p_bis = (p == 0.) + p
+    return -float(np.sum(p_bis * np.log(p_bis)))
+
     raise NotImplementedError
 # ============================ END TODO (Task 4) ==============================
 
@@ -116,6 +126,9 @@ def cross_entropy(p: np.ndarray, q: np.ndarray) -> float:
         probability you take the logarithm of; Task 6 must use the same value.
         Do not modify the inputs in place.
     """
+    q_bis = np.maximum((p == 0.) * (q == 0.) + q, 1e-12)
+    return -float(np.sum(p * np.log(q_bis)))
+
     raise NotImplementedError
 # ============================ END TODO (Task 5) ==============================
 
@@ -131,12 +144,16 @@ def kl_divergence(p: np.ndarray, q: np.ndarray) -> float:
         q: 1D predicted distribution of the same length.
 
     Returns:
-        Python float, >= 0, and exactly 0.0 when p and q are equal.
+        Python float, >= 0, and exactly 0.0 when p and q are e    return float(np.sum(p * np.log(p / q)))qual.
 
     Requirement: the same zero conventions as `cross_entropy`. Your result
         must satisfy the identity D_KL(p || q) = H(p, q) - H(p); a test
         checks it against your own `cross_entropy` and `entropy`.
     """
+    q_bis = np.maximum(q, 1e-12)    
+    nonzero_p = p > 0
+    return float(np.sum(p[nonzero_p] * np.log(p[nonzero_p] / q_bis[nonzero_p])))
+
     raise NotImplementedError
 # ============================ END TODO (Task 6) ==============================
 
@@ -170,6 +187,22 @@ def focal_loss(p: np.ndarray, q: np.ndarray, gamma: float = 2.0,
     Requirement: with `gamma=0` and `alpha=None` this must return exactly the
         same value as `cross_entropy(p, q)` — a test checks that.
     """
+    q_bis = np.maximum(q, 1e-12)
+    gamma_term = (1.0 - q_bis) ** gamma
+    
+    nonzero_p = p > 0
+    p_bis = p[nonzero_p]
+    gamma_term_bis = gamma_term[nonzero_p]
+    log_q_bis = np.log(q_bis[nonzero_p])
+    
+    if alpha is None:
+        FL_terms = p_bis * gamma_term_bis * log_q_bis
+    else:
+        alpha_bis = alpha[nonzero_p]
+        FL_terms = p_bis * alpha_bis * gamma_term_bis * log_q_bis
+        
+    return -float(np.sum(FL_terms))
+
     raise NotImplementedError
 # ============================ END TODO (Task 7) ==============================
 
